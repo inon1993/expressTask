@@ -1,5 +1,6 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
+// import { ClassDatesInterface } from "./classDatesTable";
 
 type CourseSchemaModel = Model<AppModel["Course"]>;
 
@@ -13,6 +14,7 @@ export interface CourseInterface {
 
 export async function createTable(
   sequelize: Sequelize
+  //   ClassDate: ClassDatesInterface["Schema"]
 ): Promise<CourseInterface> {
   const CourseSchema = sequelize.define<CourseSchemaModel>(
     "Course",
@@ -50,9 +52,11 @@ export async function createTable(
     },
     {
       schema: "express_task",
-      createdAt: false,
     }
   );
+
+  //   CourseSchema.hasMany(ClassDate);
+  //   ClassDate.belongsTo(CourseSchema);
 
   await CourseSchema.sync();
   return {

@@ -1,6 +1,6 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
-import { ClassDatesInterface } from "./classDatesTable";
+import { CourseInterface } from "./courseTable";
 
 type SyllabusSchemaModel = Model<AppModel["Syllabus"]>;
 
@@ -14,7 +14,7 @@ export interface SyllabusInterface {
 
 export async function createTable(
   sequelize: Sequelize,
-  ClassDates: ClassDatesInterface["Schema"]
+  Course: CourseInterface["Schema"]
 ): Promise<SyllabusInterface> {
   const SyllabusSchema = sequelize.define<SyllabusSchemaModel>(
     "Syllabus",
@@ -24,30 +24,30 @@ export async function createTable(
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
       },
+      courseId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+      },
       title: {
         type: DataTypes.TEXT,
         allowNull: false,
       },
       description: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
-      classDatesId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: ClassDates,
-          key: "id",
-        },
+      references: {
+        type: DataTypes.ARRAY(DataTypes.TEXT),
+        allowNull: true,
       },
     },
     {
       schema: "express_task",
-      createdAt: false,
     }
   );
 
-  SyllabusSchema.belongsTo(ClassDates);
+  Course.hasMany(SyllabusSchema, { foreignKey: "courseId" });
+  SyllabusSchema.belongsTo(Course, { foreignKey: "courseId" });
 
   await SyllabusSchema.sync();
   return {

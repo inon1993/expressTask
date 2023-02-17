@@ -1,6 +1,7 @@
 export interface Syllabus {
   id: string;
+  courseId: string;
   title: string;
   description: string;
-  classDatesId: string;
+  references: string[];
 }

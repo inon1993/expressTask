@@ -5,6 +5,8 @@ import { createTable as createClassDates } from "./classDatesTable";
 import { createTable as createSyllabus } from "./syllabusTable";
 import { createTable as createLecturer } from "./lecturerTable";
 import { createTable as createStudent } from "./studentTable";
+import { createTable as createStudentCourses } from "./studentCoursesTable";
+import { createTable as createRoom } from "./roomTable";
 
 export async function createDatabase() {
   const sequelize = new Sequelize({
@@ -40,19 +42,29 @@ export async function createTables(createDB: boolean) {
 
   const Course = await createCourse(connection);
   const Lecturer = await createLecturer(connection);
+  const Student = await createStudent(connection);
+  const Room = await createRoom(connection);
+  const Syllabus = await createSyllabus(connection, Course.Schema);
   const ClassDates = await createClassDates(
     connection,
     Course.Schema,
-    Lecturer.Schema
+    Lecturer.Schema,
+    Syllabus.Schema,
+    Room.Schema
   );
-  const Syllabus = await createSyllabus(connection, ClassDates.Schema);
-  const Student = await createStudent(connection);
+  const StudentCourses = await createStudentCourses(
+    connection,
+    Course.Schema,
+    Student.Schema
+  );
 
   return {
     Syllabus,
     Course,
     Student,
     Lecturer,
+    Room,
     ClassDates,
+    StudentCourses,
   };
 }

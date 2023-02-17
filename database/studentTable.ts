@@ -6,7 +6,7 @@ type StudentSchemaModel = Model<AppModel["Student"]>;
 export interface StudentInterface {
   Schema: ModelStatic<StudentSchemaModel>;
   insert: (
-    course: Omit<AppModel["Student"], "id">
+    student: Omit<AppModel["Student"], "id">
   ) => Promise<AppModel["Student"]>;
   searchById: (id: string) => Promise<AppModel["Student"] | undefined>;
 }
@@ -37,7 +37,6 @@ export async function createTable(
     },
     {
       schema: "express_task",
-      createdAt: false,
     }
   );
 
@@ -55,4 +54,4 @@ export async function createTable(
   };
 }
 
-export type CourseTable = Awaited<ReturnType<typeof createTable>>;
+export type StudentsTable = Awaited<ReturnType<typeof createTable>>;
