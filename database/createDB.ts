@@ -19,8 +19,7 @@ export async function createDatabase() {
       console.log("Query: %s", sql);
     },
   });
-  const result =
-    await sequelize.query(`CREATE DATABASE express_task WITH                    \
+  const result = await sequelize.query(`CREATE DATABASE express_task WITH
     OWNER = postgres
     ENCODING = 'UTF8'
     CONNECTION LIMIT = -1

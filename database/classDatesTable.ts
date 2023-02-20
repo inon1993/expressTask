@@ -13,16 +13,25 @@ export interface ClassDatesInterface {
     course: Omit<AppModel["ClassDates"], "id">
   ) => Promise<AppModel["ClassDates"]>;
   searchById: (id: string) => Promise<AppModel["ClassDates"] | undefined>;
+  searchLecturerCurrentCourses: (
+    lecturerId: string
+  ) => Promise<AppModel["Course"][]>;
   searchLecturerCourses: (
     lecturerId: string,
     startDate: Date,
     endDate: Date
-  ) => Promise<AppModel["Course"][]>;
+  ) => Promise<
+    // (AppModel["Course"] & {
+    //   ClassDates: Array<AppModel["ClassDates"]>;
+    // })[]
+    AppModel["Course"][]
+  >;
   getLecturerSchedule: (
     lecturerId: string,
     startDate: Date,
     endDate: Date
   ) => Promise<AppModel["ClassDates"][]>;
+  delete: (id: string) => Promise<boolean>;
 }
 
 export async function createTable(
@@ -136,7 +145,6 @@ export async function createTable(
           ],
         },
       });
-      console.log(isLecturerAvailable?.toJSON());
 
       if (isLecturerAvailable) {
         throw new Error(
@@ -173,6 +181,34 @@ export async function createTable(
       const result = await ClassDatesSchema.findByPk(id);
       return result?.toJSON();
     },
+    async searchLecturerCurrentCourses(lecturerId: string) {
+      const lecturer = await Lecturer.findByPk(lecturerId);
+      if (!lecturer) {
+        throw new Error(`Lecturer with ID ${lecturerId} not found`);
+      }
+      const coursesData = await Course.findAll({
+        attributes: ["courseName"],
+        include: [
+          {
+            model: ClassDatesSchema,
+            where: { lecturerId: lecturerId },
+            attributes: [],
+          },
+        ],
+        where: {
+          startingDate: {
+            [Op.lte]: new Date(),
+          },
+          endDate: {
+            [Op.gte]: new Date(),
+          },
+        },
+      });
+
+      const courses: AppModel["Course"][] = coursesData.map((c) => c.toJSON());
+
+      return courses;
+    },
     async searchLecturerCourses(
       lecturerId: string,
       startDate: Date,
@@ -183,9 +219,12 @@ export async function createTable(
         throw new Error(`Lecturer with ID ${lecturerId} not found`);
       }
       const coursesData = await Course.findAll({
+        // attributes: ["courseName"],
         include: [
           {
             model: ClassDatesSchema,
+            // attributes: ["date"],
+            attributes: [],
             where: { lecturerId: lecturerId },
           },
         ],
@@ -199,7 +238,15 @@ export async function createTable(
         },
       });
 
+      // const courses: (AppModel["Course"] & {
+      //   ClassDates: Array<AppModel["ClassDates"]>;
+      // })[] = coursesData.map((c) =>
+      //   c.toJSON<
+      //     AppModel["Course"] & { ClassDates: AppModel["ClassDates"][] }
+      //   >()
+      // );
       const courses = coursesData.map((c) => c.toJSON());
+
       return courses;
     },
     async getLecturerSchedule(
@@ -218,11 +265,17 @@ export async function createTable(
             [Op.between]: [startDate, endDate],
           },
         },
-        include: [Course],
+        include: [{ model: Course, attributes: ["id", "courseName"] }],
       });
 
       const classDates = classDatesData.map((cd) => cd.toJSON());
       return classDates;
+    },
+    async delete(id: string) {
+      await ClassDatesSchema.destroy({
+        where: { id: id },
+      });
+      return true;
     },
   };
 }

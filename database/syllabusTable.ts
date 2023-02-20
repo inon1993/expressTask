@@ -10,6 +10,7 @@ export interface SyllabusInterface {
     course: Omit<AppModel["Syllabus"], "id">
   ) => Promise<AppModel["Syllabus"]>;
   searchById: (id: string) => Promise<AppModel["Syllabus"] | undefined>;
+  delete: (id: string) => Promise<boolean>;
 }
 
 export async function createTable(
@@ -61,6 +62,12 @@ export async function createTable(
     async searchById(id: string) {
       const result = await SyllabusSchema.findByPk(id);
       return result?.toJSON();
+    },
+    async delete(id: string) {
+      await SyllabusSchema.destroy({
+        where: { id: id },
+      });
+      return true;
     },
   };
 }

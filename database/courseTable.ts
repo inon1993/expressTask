@@ -1,20 +1,22 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
-// import { ClassDatesInterface } from "./classDatesTable";
 
-type CourseSchemaModel = Model<AppModel["Course"]>;
+type CourseInterfaceOmitted = Omit<
+  AppModel["Course"],
+  "classDates" | "syllabus"
+>;
+type CourseSchemaModel = Model<CourseInterfaceOmitted>;
 
 export interface CourseInterface {
   Schema: ModelStatic<CourseSchemaModel>;
   insert: (
-    course: Omit<AppModel["Course"], "id" | "isReady">
-  ) => Promise<AppModel["Course"]>;
-  searchById: (id: string) => Promise<AppModel["Course"] | undefined>;
+    course: Omit<CourseInterfaceOmitted, "id" | "isReady">
+  ) => Promise<CourseInterfaceOmitted>;
+  searchById: (id: string) => Promise<CourseInterfaceOmitted | undefined>;
 }
 
 export async function createTable(
   sequelize: Sequelize
-  //   ClassDate: ClassDatesInterface["Schema"]
 ): Promise<CourseInterface> {
   const CourseSchema = sequelize.define<CourseSchemaModel>(
     "Course",
@@ -55,14 +57,13 @@ export async function createTable(
     }
   );
 
-  //   CourseSchema.hasMany(ClassDate);
-  //   ClassDate.belongsTo(CourseSchema);
-
   await CourseSchema.sync();
   return {
     Schema: CourseSchema,
     async insert(course) {
-      const result = await CourseSchema.create(course as AppModel["Course"]);
+      const result = await CourseSchema.create(
+        course as CourseInterfaceOmitted
+      );
       return result.toJSON();
     },
     async searchById(id: string) {

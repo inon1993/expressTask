@@ -1,6 +1,5 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
-// import { ClassDatesInterface } from "./classDatesTable";
 
 type LecturerSchemaModel = Model<AppModel["Lecturer"]>;
 
@@ -9,13 +8,12 @@ export interface LecturerInterface {
   insert: (
     course: Omit<AppModel["Lecturer"], "id">
   ) => Promise<AppModel["Lecturer"]>;
-  delete: (id: string) => Promise<void>;
+  delete: (id: string) => Promise<boolean>;
   searchById: (id: string) => Promise<AppModel["Lecturer"] | undefined>;
 }
 
 export async function createTable(
   sequelize: Sequelize
-  //   ClassDates: ClassDatesInterface["Schema"]
 ): Promise<LecturerInterface> {
   const LecturerSchema = sequelize.define<LecturerSchemaModel>(
     "Lecturer",
@@ -43,9 +41,6 @@ export async function createTable(
     }
   );
 
-  //   LecturerSchema.hasMany(ClassDates);
-  //   ClassDates.belongsTo(LecturerSchema);
-
   await LecturerSchema.sync();
   return {
     Schema: LecturerSchema,
@@ -59,6 +54,7 @@ export async function createTable(
       await LecturerSchema.destroy({
         where: { id: id },
       });
+      return true;
     },
     async searchById(id: string) {
       const result = await LecturerSchema.findByPk(id);

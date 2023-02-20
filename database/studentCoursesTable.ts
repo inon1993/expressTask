@@ -1,4 +1,11 @@
-import { Model, Sequelize, DataTypes, ModelStatic, Op } from "sequelize";
+import {
+  Model,
+  Sequelize,
+  DataTypes,
+  ModelStatic,
+  Op,
+  QueryTypes,
+} from "sequelize";
 import { Model as AppModel } from "../models";
 import { CourseInterface } from "./courseTable";
 import { StudentInterface } from "./studentTable";
@@ -11,21 +18,22 @@ export interface StudentCoursesInterface {
     studentCourses: Omit<AppModel["StudentCourses"], "id">
   ) => Promise<AppModel["StudentCourses"]>;
   searchById: (id: string) => Promise<AppModel["StudentCourses"] | undefined>;
-  delete: (id: string) => Promise<void>;
+  delete: (id: string) => Promise<boolean>;
   addStudentToCourseIfAvailable: (
     studentId: string,
     courseIdL: string
   ) => Promise<AppModel["StudentCourses"]>;
-  //   searchLecturerCourses: (
-  //     lecturerId: string,
-  //     startDate: Date,
-  //     endDate: Date
-  //   ) => Promise<AppModel["Course"][]>;
-  //   getLecturerSchedule: (
-  //     lecturerId: string,
-  //     startDate: Date,
-  //     endDate: Date
-  //   ) => Promise<AppModel["ClassDates"][]>;
+  searchStudentCurrentCourses: (
+    studentId: string
+  ) => Promise<undefined | AppModel["Course"][]>;
+  getStudentsCoursesHistory: (
+    studentId: string
+  ) => Promise<AppModel["Course"][]>;
+  getStudentSchedule: (
+    studentId: string,
+    afterDate: Date,
+    beforeDate: Date
+  ) => Promise<Array<AppModel["ClassDates"] & { courseName: string }>>;
 }
 
 export async function createTable(
@@ -34,7 +42,7 @@ export async function createTable(
   Student: StudentInterface["Schema"]
 ): Promise<StudentCoursesInterface> {
   const StudentCoursesSchema = sequelize.define<StudentCoursesSchemaModel>(
-    "StudentCourses",
+    "StudentCourse",
     {
       id: {
         type: DataTypes.UUID,
@@ -77,6 +85,7 @@ export async function createTable(
       await StudentCoursesSchema.destroy({
         where: { id: id },
       });
+      return true;
     },
     async searchById(id: string) {
       const result = await StudentCoursesSchema.findByPk(id);
@@ -130,57 +139,63 @@ export async function createTable(
 
       return result.toJSON();
     },
-    // async searchLecturerCourses(
-    //   lecturerId: string,
-    //   startDate: Date,
-    //   endDate: Date
-    // ) {
-    //   const lecturer = await Lecturer.findByPk(lecturerId);
-    //   if (!lecturer) {
-    //     throw new Error(`Lecturer with ID ${lecturerId} not found`);
-    //   }
-    //   const coursesData = await Course.findAll({
-    //     include: [
-    //       {
-    //         model: ClassDatesSchema,
-    //         where: { lecturerId: lecturerId },
-    //       },
-    //     ],
-    //     where: {
-    //       startingDate: {
-    //         [Op.between]: [startDate, endDate],
-    //       },
-    //       endDate: {
-    //         [Op.between]: [startDate, endDate],
-    //       },
-    //     },
-    //   });
+    async searchStudentCurrentCourses(studentId: string) {
+      const result = await Course.findAll({
+        include: [
+          {
+            model: Student,
+            where: { id: studentId },
+            attributes: [],
+          },
+        ],
+        where: {
+          startingDate: {
+            [Op.lte]: new Date(),
+          },
+          endDate: {
+            [Op.gte]: new Date(),
+          },
+        },
+      });
+      const courses = result.map((c) => c.toJSON());
+      return courses;
+    },
+    async getStudentsCoursesHistory(studentId: string) {
+      const result = await Course.findAll({
+        include: [
+          {
+            model: Student,
+            where: { id: studentId },
+            attributes: [],
+          },
+        ],
+      });
 
-    //   const courses = coursesData.map((c) => c.toJSON());
-    //   return courses;
-    // },
-    // async getLecturerSchedule(
-    //   lecturerId: string,
-    //   startDate: Date,
-    //   endDate: Date
-    // ) {
-    //   const lecturer = await Lecturer.findByPk(lecturerId);
-    //   if (!lecturer) {
-    //     throw new Error(`Lecturer with ID ${lecturerId} not found`);
-    //   }
-    //   const classDatesData = await ClassDatesSchema.findAll({
-    //     where: {
-    //       lecturerId: lecturerId,
-    //       date: {
-    //         [Op.between]: [startDate, endDate],
-    //       },
-    //     },
-    //     include: [Course],
-    //   });
+      const courses = result.map((c) => c.toJSON());
+      return courses;
+    },
+    async getStudentSchedule(
+      studentId: string,
+      afterDate: Date,
+      beforeDate: Date
+    ) {
+      const befDate = beforeDate.toISOString();
+      const aftDate = afterDate.toISOString();
+      const result: Array<AppModel["ClassDates"] & { courseName: string }> =
+        await sequelize.query(
+          `SELECT cd."id", cd."date", cd."startHour", cd."endHour", cd."roomId", cd."lecturerId", cd."courseId", cd."syllabusId", c."courseName"\n
+        FROM express_task."ClassDates" AS cd
+        JOIN express_task."Courses" c
+        ON cd."courseId" = c."id"
+        JOIN express_task."StudentCourses" sc
+        ON c."id" = sc."courseId"
+        WHERE sc."studentId" = '${studentId}' AND cd."date" BETWEEN '${aftDate}' AND <= '${befDate}'`,
+          { type: QueryTypes.SELECT }
+        );
+      console.log(result);
 
-    //   const classDates = classDatesData.map((cd) => cd.toJSON());
-    //   return classDates;
-    // },
+      return result;
+    },
   };
 }
 
