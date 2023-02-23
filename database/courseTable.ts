@@ -13,6 +13,7 @@ export interface CourseInterface {
     course: Omit<CourseInterfaceOmitted, "id" | "isReady">
   ) => Promise<CourseInterfaceOmitted>;
   searchById: (id: string) => Promise<CourseInterfaceOmitted | undefined>;
+  update: (id: string, course: any) => Promise<Array<number>>;
 }
 
 export async function createTable(
@@ -69,6 +70,14 @@ export async function createTable(
     async searchById(id: string) {
       const result = await CourseSchema.findByPk(id);
       return result?.toJSON();
+    },
+    async update(id: string, course: any) {
+      const result = await CourseSchema.update(course, {
+        where: {
+          id: id,
+        },
+      });
+      return result;
     },
   };
 }

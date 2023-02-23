@@ -8,6 +8,7 @@ export interface StudentInterface {
   insert: (
     student: Omit<AppModel["Student"], "id">
   ) => Promise<AppModel["Student"]>;
+  delete: (id: string) => Promise<boolean>;
   searchById: (id: string) => Promise<AppModel["Student"] | undefined>;
 }
 
@@ -46,6 +47,12 @@ export async function createTable(
     async insert(student) {
       const result = await StudentSchema.create(student as AppModel["Student"]);
       return result.toJSON();
+    },
+    async delete(id: string) {
+      await StudentSchema.destroy({
+        where: { id: id },
+      });
+      return true;
     },
     async searchById(id: string) {
       const result = await StudentSchema.findByPk(id);

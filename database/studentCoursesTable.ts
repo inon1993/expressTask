@@ -34,6 +34,7 @@ export interface StudentCoursesInterface {
     afterDate: Date,
     beforeDate: Date
   ) => Promise<Array<AppModel["ClassDates"] & { courseName: string }>>;
+  countStudents: (courseId: string) => Promise<number>;
 }
 
 export async function createTable(
@@ -105,6 +106,17 @@ export async function createTable(
       const newCourse = await Course.findByPk(courseId);
       if (!newCourse) {
         throw new Error(`Course with ID ${courseId} not found.`);
+      }
+
+      const isStudentCourse = await StudentCoursesSchema.findOne({
+        where: {
+          studentId: studentId,
+          courseId: courseId,
+        },
+      });
+
+      if (isStudentCourse) {
+        throw new Error("Student is already signed for given course.");
       }
 
       const s: any = student.toJSON();
@@ -183,18 +195,24 @@ export async function createTable(
       const aftDate = afterDate.toISOString();
       const result: Array<AppModel["ClassDates"] & { courseName: string }> =
         await sequelize.query(
-          `SELECT cd."id", cd."date", cd."startHour", cd."endHour", cd."roomId", cd."lecturerId", cd."courseId", cd."syllabusId", c."courseName"\n
+          `SELECT cd."id", cd."date", cd."startHour", cd."endHour", cd."roomId", cd."lecturerId", cd."courseId", cd."syllabusId", c."courseName"
         FROM express_task."ClassDates" AS cd
         JOIN express_task."Courses" c
         ON cd."courseId" = c."id"
         JOIN express_task."StudentCourses" sc
         ON c."id" = sc."courseId"
-        WHERE sc."studentId" = '${studentId}' AND cd."date" BETWEEN '${aftDate}' AND <= '${befDate}'`,
+        WHERE sc."studentId" = '${studentId}' AND cd."date" BETWEEN '${aftDate}' AND '${befDate}'`,
           { type: QueryTypes.SELECT }
         );
-      console.log(result);
-
       return result;
+    },
+    async countStudents(courseId: string) {
+      const numOfStudents = await StudentCoursesSchema.count({
+        where: {
+          courseId: courseId,
+        },
+      });
+      return numOfStudents;
     },
   };
 }

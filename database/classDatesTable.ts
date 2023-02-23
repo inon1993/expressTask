@@ -32,6 +32,20 @@ export interface ClassDatesInterface {
     endDate: Date
   ) => Promise<AppModel["ClassDates"][]>;
   delete: (id: string) => Promise<boolean>;
+  getCourse: (
+    id: string,
+    fullInfo: boolean
+  ) => Promise<
+    AppModel["Course"] | Omit<AppModel["Course"], "classDates" | "syllabus">
+  >;
+  getClassDatesBeforeDate: (
+    id: string,
+    data: Date
+  ) => Promise<AppModel["ClassDates"][]>;
+  getClassDatesAfterDate: (
+    id: string,
+    data: Date
+  ) => Promise<AppModel["ClassDates"][]>;
 }
 
 export async function createTable(
@@ -276,6 +290,64 @@ export async function createTable(
         where: { id: id },
       });
       return true;
+    },
+    async getCourse(id: string, fullInfo: boolean) {
+      if (fullInfo) {
+        const result = await Course.findByPk(id, {
+          include: [
+            {
+              model: ClassDatesSchema,
+              where: {
+                courseId: id,
+              },
+            },
+            {
+              model: Syllabus,
+              where: {
+                courseId: id,
+              },
+            },
+          ],
+        });
+
+        if (!result) {
+          throw new Error(`Course ID: ${id} not found.`);
+        }
+        const course: AppModel["Course"] = result.toJSON();
+        return course;
+      } else {
+        const result = await Course.findByPk(id);
+        if (!result) {
+          throw new Error(`Course ID ${id} not found.`);
+        }
+        const course: Omit<AppModel["Course"], "ClassDates" | "Syllabus"> =
+          result.toJSON();
+        return course;
+      }
+    },
+    async getClassDatesBeforeDate(id: string, date: Date) {
+      const result = await ClassDatesSchema.findAll({
+        where: {
+          courseId: id,
+          date: {
+            [Op.lt]: date,
+          },
+        },
+      });
+      const dates = result.map((d) => d.toJSON());
+      return dates;
+    },
+    async getClassDatesAfterDate(id: string, date: Date) {
+      const result = await ClassDatesSchema.findAll({
+        where: {
+          courseId: id,
+          date: {
+            [Op.gt]: date,
+          },
+        },
+      });
+      const dates = result.map((d) => d.toJSON());
+      return dates;
     },
   };
 }
