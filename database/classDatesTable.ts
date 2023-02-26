@@ -20,12 +20,7 @@ export interface ClassDatesInterface {
     lecturerId: string,
     startDate: Date,
     endDate: Date
-  ) => Promise<
-    // (AppModel["Course"] & {
-    //   ClassDates: Array<AppModel["ClassDates"]>;
-    // })[]
-    AppModel["Course"][]
-  >;
+  ) => Promise<AppModel["Course"][]>;
   getLecturerSchedule: (
     lecturerId: string,
     startDate: Date,
@@ -46,6 +41,7 @@ export interface ClassDatesInterface {
     id: string,
     data: Date
   ) => Promise<AppModel["ClassDates"][]>;
+  countClassDates: (id: string) => Promise<number>;
 }
 
 export async function createTable(
@@ -97,7 +93,10 @@ export async function createTable(
     }
   );
 
-  Course.hasMany(ClassDatesSchema, { foreignKey: "courseId" });
+  Course.hasMany(ClassDatesSchema, {
+    foreignKey: "courseId",
+    onDelete: "CASCADE",
+  });
   ClassDatesSchema.belongsTo(Course, { foreignKey: "courseId" });
   Lecturer.hasMany(ClassDatesSchema, { foreignKey: "lecturerId" });
   ClassDatesSchema.belongsTo(Lecturer, { foreignKey: "lecturerId" });
@@ -233,11 +232,9 @@ export async function createTable(
         throw new Error(`Lecturer with ID ${lecturerId} not found`);
       }
       const coursesData = await Course.findAll({
-        // attributes: ["courseName"],
         include: [
           {
             model: ClassDatesSchema,
-            // attributes: ["date"],
             attributes: [],
             where: { lecturerId: lecturerId },
           },
@@ -251,14 +248,6 @@ export async function createTable(
           },
         },
       });
-
-      // const courses: (AppModel["Course"] & {
-      //   ClassDates: Array<AppModel["ClassDates"]>;
-      // })[] = coursesData.map((c) =>
-      //   c.toJSON<
-      //     AppModel["Course"] & { ClassDates: AppModel["ClassDates"][] }
-      //   >()
-      // );
       const courses = coursesData.map((c) => c.toJSON());
 
       return courses;
@@ -348,6 +337,14 @@ export async function createTable(
       });
       const dates = result.map((d) => d.toJSON());
       return dates;
+    },
+    async countClassDates(id: string) {
+      const num = await ClassDatesSchema.count({
+        where: {
+          courseId: id,
+        },
+      });
+      return num;
     },
   };
 }

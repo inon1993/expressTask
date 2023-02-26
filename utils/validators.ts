@@ -7,7 +7,7 @@ export const emailValidator = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/i;
 
 export const nameValidator = /^[a-zA-Z ]+$/i;
 
-export const courseNameValidator = /^[a-zA-Z0-9 ]+$/i;
+export const courseNameValidator = /^\S+$/i;
 
 export const phoneNoValidator =
   /^(\+{0,})(\d{0,})([(]{1}\d{1,3}[)]{0,}){0,}(\s?\d+|\+\d{2,3}\s{1}\d+|\d+){1}[\s|-]?\d+([\s|-]?\d+){1,2}(\s){0,}$/gim;
@@ -140,21 +140,23 @@ export const courseUpdateValidator = (
   return { status: true };
 };
 
-const courseValidator = (input: Omit<AppModel["Course"], "id" | "isReady">) => {
+export const courseValidator = (input: any) => {
+  const startingDate = dateObjectValidator(input.startingDate);
+  const endDate = dateObjectValidator(input.endDate);
   if (
     !courseNameValidator.test(input.courseName) ||
-    !input.startingDate ||
-    !input.endDate ||
-    input.endDate > input.startingDate ||
-    minimumPassScoreValidator(input.minimumPassScore) ||
-    maximumStudentsValidator(input.maximumStudents)
+    !startingDate ||
+    !endDate ||
+    endDate < startingDate ||
+    !minimumPassScoreValidator(input.minimumPassScore) ||
+    !maximumStudentsValidator(input.maximumStudents)
   ) {
     throw new Error("Invalid input.");
   }
   return {
     courseName: input.courseName,
-    startingDate: input.startingDate,
-    endDate: input.endDate,
+    startingDate: startingDate,
+    endDate: endDate,
     minimumPassScore: input.minimumPassScore,
     maximumStudents: input.maximumStudents,
   };

@@ -14,6 +14,8 @@ export interface CourseInterface {
   ) => Promise<CourseInterfaceOmitted>;
   searchById: (id: string) => Promise<CourseInterfaceOmitted | undefined>;
   update: (id: string, course: any) => Promise<Array<number>>;
+  delete: (id: string) => Promise<boolean>;
+  updateReady: (id: string, isReady: boolean) => Promise<Array<number>>;
 }
 
 export async function createTable(
@@ -73,6 +75,21 @@ export async function createTable(
     },
     async update(id: string, course: any) {
       const result = await CourseSchema.update(course, {
+        where: {
+          id: id,
+        },
+      });
+      return result;
+    },
+    async delete(id: string) {
+      await CourseSchema.destroy({
+        where: { id: id },
+      });
+      return true;
+    },
+    async updateReady(id: string, isReady: boolean) {
+      const data = { isReady: isReady };
+      const result = await CourseSchema.update(data, {
         where: {
           id: id,
         },

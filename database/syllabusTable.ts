@@ -11,6 +11,7 @@ export interface SyllabusInterface {
   ) => Promise<AppModel["Syllabus"]>;
   searchById: (id: string) => Promise<AppModel["Syllabus"] | undefined>;
   delete: (id: string) => Promise<boolean>;
+  countSyllabus: (id: string) => Promise<number>;
 }
 
 export async function createTable(
@@ -47,7 +48,10 @@ export async function createTable(
     }
   );
 
-  Course.hasMany(SyllabusSchema, { foreignKey: "courseId" });
+  Course.hasMany(SyllabusSchema, {
+    foreignKey: "courseId",
+    onDelete: "CASCADE",
+  });
   SyllabusSchema.belongsTo(Course, { foreignKey: "courseId" });
 
   await SyllabusSchema.sync();
@@ -68,6 +72,14 @@ export async function createTable(
         where: { id: id },
       });
       return true;
+    },
+    async countSyllabus(id: string) {
+      const num = await SyllabusSchema.count({
+        where: {
+          courseId: id,
+        },
+      });
+      return num;
     },
   };
 }

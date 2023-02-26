@@ -6,8 +6,8 @@ import {
   classDateValidator,
   courseFieldsFilterValidator,
   courseUpdateValidator,
+  courseValidator,
   dateObjectValidator,
-  lecturerStudentValidator as StudentValidator,
   uuidValidator,
 } from "../utils/validators";
 
@@ -15,10 +15,10 @@ export function createRouter(db: DB) {
   const courseRouter = express.Router();
 
   courseRouter.post("/add", async (req: Request, res: Response) => {
-    const data: Omit<AppModels["Student"], "id"> = req.body;
+    const data: Omit<AppModels["Course"], "id"> = req.body;
     try {
-      const validatedData = StudentValidator(data);
-      const result = await db.Student.insert(validatedData);
+      const validatedData = courseValidator(data);
+      const result = await db.Course.insert(validatedData);
       return res.status(200).json({ status: "created", data: result });
     } catch (error) {
       return res.status(400).json(error);
@@ -39,14 +39,14 @@ export function createRouter(db: DB) {
   });
 
   courseRouter.delete(
-    "/delete_syllabus/:syllabusId",
+    "/delete/:courseId",
     async (req: Request, res: Response) => {
-      const data: string = req.params.syllabusId;
+      const data: string = req.params.courseId;
       try {
         if (!uuidValidator.test(data)) {
           throw new Error("Invalid Input.");
         }
-        const result = await db.Syllabus.delete(data);
+        const result = await db.Course.delete(data);
         if (result) {
           return res.status(200).json({ status: "deleted" });
         } else {
@@ -152,102 +152,40 @@ export function createRouter(db: DB) {
         return res.status(404).json({ status: "not found" });
       }
     } catch (error) {
-      console.log(error);
       return res.status(400).json(error);
     }
   });
 
-  //   studentRouter.post("/add_course", async (req: Request, res: Response) => {
-  //     const studentId: string = req.body.studentId;
-  //     const courseId: string = req.body.courseId;
-  //     try {
-  //       if (!uuidValidator.test(studentId) || !uuidValidator.test(courseId)) {
-  //         throw new Error("Invalid input.");
-  //       }
-  //       const result = await db.StudentCourses.addStudentToCourseIfAvailable(
-  //         studentId,
-  //         courseId
-  //       );
-  //       if (result) {
-  //         return res.status(200).json({ status: "created", data: result });
-  //       } else {
-  //         return res.status(404).json({ status: "not found" });
-  //       }
-  //     } catch (error) {
-  //       return res.status(400).json(error);
-  //     }
-  //   });
-
-  //   studentRouter.get(
-  //     "/:studentId/current_courses",
-  //     async (req: Request, res: Response) => {
-  //       const data: string = req.params.studentId;
-  //       try {
-  //         if (!uuidValidator.test(data)) {
-  //           throw new Error("Invalid Input.");
-  //         }
-  //         const result = await db.StudentCourses.searchStudentCurrentCourses(
-  //           data
-  //         );
-  //         if (result) {
-  //           return res.status(200).json({ status: "success", data: result });
-  //         } else {
-  //           return res.status(404).json({ status: "not found" });
-  //         }
-  //       } catch (error) {
-  //         return res.status(400).json(error);
-  //       }
-  //     }
-  //   );
-
-  //   studentRouter.get(
-  //     "/:studentId/courses",
-  //     async (req: Request, res: Response) => {
-  //       const id: string = req.params.studentId;
-  //       try {
-  //         if (!uuidValidator.test(id)) {
-  //           throw new Error("Invalid Input.");
-  //         }
-  //         const result = await db.StudentCourses.getStudentsCoursesHistory(id);
-  //         if (result) {
-  //           return res.status(200).json({ status: "success", data: result });
-  //         } else {
-  //           return res.status(404).json({ status: "not found" });
-  //         }
-  //       } catch (error) {
-  //         return res.status(400).json(error);
-  //       }
-  //     }
-  //   );
-
-  //   studentRouter.get(
-  //     "/:studentId/schedule/:startDate/:endDate",
-  //     async (req: Request, res: Response) => {
-  //       const id: string = req.params.studentId;
-  //       const startDate = req.params.startDate;
-  //       const endDate = req.params.endDate;
-  //       try {
-  //         const startDateObject = dateObjectValidator(startDate);
-  //         const endDateObject = dateObjectValidator(endDate);
-  //         if (!uuidValidator.test(id) || !startDateObject || !endDateObject) {
-  //           throw new Error("Invalid Input.");
-  //         }
-
-  //         const result = await db.StudentCourses.getStudentSchedule(
-  //           id,
-  //           startDateObject,
-  //           endDateObject
-  //         );
-  //         if (result) {
-  //           return res.status(200).json({ status: "success", data: result });
-  //         } else {
-  //           return res.status(404).json({ status: "not found" });
-  //         }
-  //       } catch (error) {
-  //         return res.status(400).json(error);
-  //       }
-  //     }
-  //   );
-
+  courseRouter.put(
+    "/set_is_ready/:courseId",
+    async (req: Request, res: Response) => {
+      try {
+        const results = { status: "", comments: "" };
+        const id = req.params.courseId;
+        if (!uuidValidator.test(id)) {
+          throw new Error("Invalid input.");
+        }
+        const isSyllabus = await db.Syllabus.countSyllabus(id);
+        if (!isSyllabus || isSyllabus < 1) {
+          const updateRow = await db.Course.updateReady(id, false);
+          results.comments += "Missing syllabus. ";
+          results.status = "not ready";
+        }
+        const isClassDates = await db.ClassDates.countClassDates(id);
+        if (!isClassDates || isClassDates < 1) {
+          const updateRow = await db.Course.updateReady(id, false);
+          results.comments += "Missing class dates. ";
+          results.status = "not ready";
+        }
+        if (isSyllabus > 0 && isClassDates > 0) {
+          const updateRow = await db.Course.updateReady(id, true);
+          results.status = "ready";
+        }
+        return res.status(200).json(results);
+      } catch (error) {
+        return res.status(400).json(error);
+      }
+    }
+  );
   return courseRouter;
 }
