@@ -1,4 +1,5 @@
 import { Model as AppModel } from "../models";
+import * as errorMsg from "./errorMessages";
 
 export const uuidValidator =
   /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -35,7 +36,7 @@ export const lecturerStudentValidator = (
     !phoneNoValidator.test(input.phoneNumber) ||
     !emailValidator.test(input.email)
   ) {
-    throw new Error("Invalid input.");
+    throw new Error(errorMsg.invalidInput);
   }
   return {
     name: input.name,
@@ -46,7 +47,7 @@ export const lecturerStudentValidator = (
 
 export const dateObjectValidator = (date: string) => {
   if (!dateValidator.test(date)) {
-    throw new Error("Invalid input.");
+    throw new Error(errorMsg.invalidInput);
   }
 
   const splitDateValidator = /[-./]/;
@@ -106,34 +107,34 @@ export const courseUpdateValidator = (
       !minimumPassScoreValidator(input.minimumPassScore)) ||
     (input.maximumStudents && !maximumStudentsValidator(input.maximumStudents))
   ) {
-    return { status: false, msg: "Invalid input" };
+    return { status: false, msg: errorMsg.invalidInput };
   }
   if (
     input.startingDate &&
     input.endDate &&
     input.startingDate > input.endDate
   ) {
-    return { status: false, msg: "Starting date is after end date." };
+    return { status: false, msg: errorMsg.startingDateAfterEndDate };
   }
 
   if (input.maximumStudents && input.maximumStudents < numOfStudents) {
     return {
       status: false,
-      msg: "Maximum students input is less than number of students assigned to this course.",
+      msg: errorMsg.maxStudentSmallerThenCourseStudents,
     };
   }
 
   if (input.startingDate && classDatesBefore > 0) {
     return {
       status: false,
-      msg: "There are classes set to this course before given starting date to update.",
+      msg: errorMsg.classDatesExistsBeforeStartingDate,
     };
   }
 
-  if (input.startingDate && classDatesAfter > 0) {
+  if (input.endDate && classDatesAfter > 0) {
     return {
       status: false,
-      msg: "There are classes set to this course after given end date to update.",
+      msg: errorMsg.classDatesExistsAfterStartingDate,
     };
   }
 
@@ -151,7 +152,7 @@ export const courseValidator = (input: any) => {
     !minimumPassScoreValidator(input.minimumPassScore) ||
     !maximumStudentsValidator(input.maximumStudents)
   ) {
-    throw new Error("Invalid input.");
+    throw new Error(errorMsg.invalidInput);
   }
   return {
     courseName: input.courseName,
@@ -192,7 +193,7 @@ export const classDateValidator = (
     !uuidValidator.test(input.courseId) ||
     !uuidValidator.test(input.syllabusId)
   ) {
-    throw new Error("Invalid input.");
+    throw new Error(errorMsg.invalidInput);
   }
 
   return {

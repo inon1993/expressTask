@@ -10,6 +10,7 @@ import {
   dateObjectValidator,
   uuidValidator,
 } from "../utils/validators";
+import * as errorMsg from "../utils/errorMessages";
 
 export function createRouter(db: DB) {
   const courseRouter = express.Router();
@@ -29,7 +30,7 @@ export function createRouter(db: DB) {
     const data: Omit<AppModels["Syllabus"], "id"> = req.body;
     try {
       if (!uuidValidator.test(data.courseId) || !data.title) {
-        throw new Error("Invalid input");
+        throw new Error(errorMsg.invalidInput);
       }
       const result = await db.Syllabus.insert(data);
       return res.status(200).json({ status: "created", data: result });
@@ -44,7 +45,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.courseId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const syllabus = await db.Syllabus.searchById(id);
         const result = await db.Syllabus.delete(id);
@@ -65,7 +66,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.courseId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const course = await db.Course.searchById(id);
         const result = await db.Course.delete(id);
@@ -88,7 +89,7 @@ export function createRouter(db: DB) {
     try {
       const validatedData = classDateValidator(data);
       if (!validatedData) {
-        throw new Error("Invalid input");
+        throw new Error(errorMsg.invalidInput);
       }
       const result = await db.ClassDates.insert(validatedData);
       return res.status(200).json({ status: "created", data: result });
@@ -103,7 +104,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.classDateId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const course = await db.ClassDates.searchById(id);
         const result = await db.ClassDates.delete(id);
@@ -125,7 +126,7 @@ export function createRouter(db: DB) {
         const courseId = req.params.courseId;
         const fullInfo = booleanValidator(req.params.fullInfo);
         if (!uuidValidator.test(courseId) || fullInfo === null) {
-          throw new Error("Invalid input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const result = await db.ClassDates.getCourse(courseId, fullInfo);
         if (result) {
@@ -143,7 +144,7 @@ export function createRouter(db: DB) {
     try {
       const id = req.params.courseId;
       if (!uuidValidator.test(id)) {
-        throw new Error("Invalid course ID");
+        throw new Error(errorMsg.invalidInput);
       }
       const course = await db.Course.searchById(id);
       const data = req.body;
@@ -190,7 +191,7 @@ export function createRouter(db: DB) {
         const results = { status: "", comments: "" };
         const id = req.params.courseId;
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const course = await db.Course.searchById(id);
         const isSyllabus = await db.Syllabus.countSyllabus(id);

@@ -4,6 +4,7 @@ import { CourseInterface } from "./courseTable";
 import { LecturerInterface } from "./lecturerTable";
 import { SyllabusInterface } from "./syllabusTable";
 import { RoomInterface } from "./roomTable";
+import * as errorMsg from "../utils/errorMessages";
 
 type ClassDatesSchemaModel = Model<AppModel["ClassDates"]>;
 
@@ -120,7 +121,7 @@ export async function createTable(
     async insert(classDate) {
       const course = await Course.findByPk(classDate.courseId);
       if (!course) {
-        throw new Error(`Course ID: ${classDate.courseId} not found.`);
+        throw new Error(errorMsg.notFound("Course", classDate.courseId));
       }
       const c = course.toJSON();
       if (classDate.date < c.startingDate || classDate.date > c.endDate) {
@@ -296,14 +297,14 @@ export async function createTable(
         });
 
         if (!result) {
-          throw new Error(`Course ID: ${id} not found.`);
+          throw new Error(errorMsg.notFound("Course", id));
         }
         const course: AppModel["Course"] = result.toJSON();
         return course;
       } else {
         const result = await Course.findByPk(id);
         if (!result) {
-          throw new Error(`Course ID ${id} not found.`);
+          throw new Error(errorMsg.notFound("Course", id));
         }
         const course: Omit<AppModel["Course"], "ClassDates" | "Syllabus"> =
           result.toJSON();

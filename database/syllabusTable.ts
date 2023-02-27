@@ -1,6 +1,7 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
 import { CourseInterface } from "./courseTable";
+import * as errorMsg from "../utils/errorMessages";
 
 type SyllabusSchemaModel = Model<AppModel["Syllabus"]>;
 
@@ -66,7 +67,7 @@ export async function createTable(
     async searchById(id: string) {
       const result = await SyllabusSchema.findByPk(id);
       if (!result) {
-        throw new Error(`Syllabus ID: ${id} not found.`);
+        throw new Error(errorMsg.notFound("Syllabus", id));
       }
       return result.toJSON();
     },

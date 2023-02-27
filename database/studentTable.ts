@@ -1,5 +1,6 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
+import * as errorMsg from "../utils/errorMessages";
 
 type StudentSchemaModel = Model<AppModel["Student"]>;
 
@@ -49,10 +50,6 @@ export async function createTable(
       return result.toJSON();
     },
     async delete(id: string) {
-      const student = await StudentSchema.findByPk(id);
-      if (!student) {
-        throw new Error(`Student ID: ${id} not found.`);
-      }
       await StudentSchema.destroy({
         where: { id: id },
       });
@@ -61,7 +58,7 @@ export async function createTable(
     async searchById(id: string) {
       const result = await StudentSchema.findByPk(id);
       if (!result) {
-        throw new Error(`Student ID: ${id} not found.`);
+        throw new Error(errorMsg.notFound("Student", id));
       }
       return result.toJSON();
     },

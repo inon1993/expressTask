@@ -6,6 +6,7 @@ import {
   lecturerStudentValidator as lecturerValidator,
   uuidValidator,
 } from "../utils/validators";
+import * as errorMsg from "../utils/errorMessages";
 
 export function createRouter(db: DB) {
   const lecturerRouter = express.Router();
@@ -27,7 +28,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.lecturerId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const lecturer = await db.Lecturer.searchById(id);
         const result = await db.Lecturer.delete(id);
@@ -48,7 +49,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.lecturerId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const lecturer = await db.Lecturer.searchById(id);
         const result = await db.ClassDates.searchLecturerCurrentCourses(id);
@@ -73,7 +74,7 @@ export function createRouter(db: DB) {
         const startDateObject = dateObjectValidator(startDate);
         const endDateObject = dateObjectValidator(endDate);
         if (!uuidValidator.test(id) || !startDateObject || !endDateObject) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const lecturer = await db.Lecturer.searchById(id);
         const result = await db.ClassDates.searchLecturerCourses(
@@ -102,7 +103,7 @@ export function createRouter(db: DB) {
         const startDateObject = dateObjectValidator(startDate);
         const endDateObject = dateObjectValidator(endDate);
         if (!uuidValidator.test(id) || !startDateObject || !endDateObject) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const lecturer = await db.Lecturer.searchById(id);
         const result = await db.ClassDates.getLecturerSchedule(

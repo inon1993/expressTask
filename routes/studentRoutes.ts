@@ -6,6 +6,7 @@ import {
   lecturerStudentValidator as StudentValidator,
   uuidValidator,
 } from "../utils/validators";
+import * as errorMsg from "../utils/errorMessages";
 
 export function createRouter(db: DB) {
   const studentRouter = express.Router();
@@ -27,7 +28,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.studentId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const isStudent = await db.Student.searchById(id);
         const result = await db.Student.delete(id);
@@ -47,7 +48,7 @@ export function createRouter(db: DB) {
     const courseId: string = req.body.courseId;
     try {
       if (!uuidValidator.test(studentId) || !uuidValidator.test(courseId)) {
-        throw new Error("Invalid input.");
+        throw new Error(errorMsg.invalidInput);
       }
       const result = await db.StudentCourses.addStudentToCourseIfAvailable(
         studentId,
@@ -69,7 +70,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.studentId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const isStudent = await db.Student.searchById(id);
         const result = await db.StudentCourses.searchStudentCurrentCourses(id);
@@ -90,7 +91,7 @@ export function createRouter(db: DB) {
       const id: string = req.params.studentId;
       try {
         if (!uuidValidator.test(id)) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const isStudent = await db.Student.searchById(id);
         const result = await db.StudentCourses.getStudentsCoursesHistory(id);
@@ -115,7 +116,7 @@ export function createRouter(db: DB) {
         const startDateObject = dateObjectValidator(startDate);
         const endDateObject = dateObjectValidator(endDate);
         if (!uuidValidator.test(id) || !startDateObject || !endDateObject) {
-          throw new Error("Invalid Input.");
+          throw new Error(errorMsg.invalidInput);
         }
         const isStudent = await db.Student.searchById(id);
         const result = await db.StudentCourses.getStudentSchedule(

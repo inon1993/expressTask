@@ -1,5 +1,6 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
+import * as errorMsg from "../utils/errorMessages";
 
 type RoomSchemaModel = Model<AppModel["Room"]>;
 
@@ -41,7 +42,7 @@ export async function createTable(
     async searchById(id: string) {
       const result = await RoomSchema.findByPk(id);
       if (!result) {
-        throw new Error(`Room ID: ${id} not found.`);
+        throw new Error(errorMsg.notFound("Room", id));
       }
       return result.toJSON();
     },

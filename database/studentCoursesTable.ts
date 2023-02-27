@@ -9,6 +9,7 @@ import {
 import { Model as AppModel } from "../models";
 import { CourseInterface } from "./courseTable";
 import { StudentInterface } from "./studentTable";
+import * as errorMsg from "../utils/errorMessages";
 
 type StudentCoursesSchemaModel = Model<AppModel["StudentCourses"]>;
 
@@ -93,7 +94,7 @@ export async function createTable(
     async searchById(id: string) {
       const result = await StudentCoursesSchema.findByPk(id);
       if (!result) {
-        throw new Error(`StudentCourse ${id} not found.`);
+        throw new Error(errorMsg.notFound("StudentCourse", id));
       }
       return result.toJSON();
     },
@@ -105,12 +106,12 @@ export async function createTable(
         include: [Course],
       });
       if (!student) {
-        throw new Error(`Student with ID ${studentId} not found.`);
+        throw new Error(errorMsg.notFound("Student", studentId));
       }
 
       const newCourse = await Course.findByPk(courseId);
       if (!newCourse) {
-        throw new Error(`Course with ID ${courseId} not found.`);
+        throw new Error(errorMsg.notFound("Course", courseId));
       }
 
       const isStudentCourse = await StudentCoursesSchema.findOne({

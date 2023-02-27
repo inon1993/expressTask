@@ -1,5 +1,6 @@
 import { Model, Sequelize, DataTypes, ModelStatic } from "sequelize";
 import { Model as AppModel } from "../models";
+import * as errorMsg from "../utils/errorMessages";
 
 type CourseInterfaceOmitted = Omit<
   AppModel["Course"],
@@ -71,7 +72,10 @@ export async function createTable(
     },
     async searchById(id: string) {
       const result = await CourseSchema.findByPk(id);
-      return result?.toJSON();
+      if (!result) {
+        throw new Error(errorMsg.notFound("Course", id));
+      }
+      return result.toJSON();
     },
     async update(id: string, course: any) {
       const result = await CourseSchema.update(course, {
