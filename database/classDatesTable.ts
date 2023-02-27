@@ -98,11 +98,20 @@ export async function createTable(
     onDelete: "CASCADE",
   });
   ClassDatesSchema.belongsTo(Course, { foreignKey: "courseId" });
-  Lecturer.hasMany(ClassDatesSchema, { foreignKey: "lecturerId" });
+  Lecturer.hasMany(ClassDatesSchema, {
+    foreignKey: "lecturerId",
+    onDelete: "CASCADE",
+  });
   ClassDatesSchema.belongsTo(Lecturer, { foreignKey: "lecturerId" });
-  Syllabus.hasMany(ClassDatesSchema, { foreignKey: "syllabusId" });
+  Syllabus.hasMany(ClassDatesSchema, {
+    foreignKey: "syllabusId",
+    onDelete: "CASCADE",
+  });
   ClassDatesSchema.belongsTo(Syllabus, { foreignKey: "syllabusId" });
-  Room.hasMany(ClassDatesSchema, { foreignKey: "roomId" });
+  Room.hasMany(ClassDatesSchema, {
+    foreignKey: "roomId",
+    onDelete: "CASCADE",
+  });
   ClassDatesSchema.belongsTo(Room, { foreignKey: "roomId" });
 
   await ClassDatesSchema.sync();

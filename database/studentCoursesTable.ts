@@ -67,10 +67,12 @@ export async function createTable(
   Course.belongsToMany(Student, {
     through: StudentCoursesSchema,
     foreignKey: "courseId",
+    onDelete: "CASCADE",
   });
   Student.belongsToMany(Course, {
     through: StudentCoursesSchema,
     foreignKey: "studentId",
+    onDelete: "CASCADE",
   });
 
   await StudentCoursesSchema.sync();

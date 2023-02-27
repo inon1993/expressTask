@@ -49,7 +49,7 @@ export const dateObjectValidator = (date: string) => {
     throw new Error("Invalid input.");
   }
 
-  const splitDateValidator = /[-.]/;
+  const splitDateValidator = /[-./]/;
   const dateAsArray = date.split(splitDateValidator);
   const dateObject = new Date(
     `${dateAsArray[2]}-${dateAsArray[1]}-${dateAsArray[0]}`
