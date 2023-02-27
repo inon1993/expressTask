@@ -204,12 +204,7 @@ export async function createTable(
       return result?.toJSON();
     },
     async searchLecturerCurrentCourses(lecturerId: string) {
-      const lecturer = await Lecturer.findByPk(lecturerId);
-      if (!lecturer) {
-        throw new Error(`Lecturer with ID ${lecturerId} not found`);
-      }
       const coursesData = await Course.findAll({
-        attributes: ["courseName"],
         include: [
           {
             model: ClassDatesSchema,
@@ -236,10 +231,6 @@ export async function createTable(
       startDate: Date,
       endDate: Date
     ) {
-      const lecturer = await Lecturer.findByPk(lecturerId);
-      if (!lecturer) {
-        throw new Error(`Lecturer with ID ${lecturerId} not found`);
-      }
       const coursesData = await Course.findAll({
         include: [
           {
@@ -266,10 +257,6 @@ export async function createTable(
       startDate: Date,
       endDate: Date
     ) {
-      const lecturer = await Lecturer.findByPk(lecturerId);
-      if (!lecturer) {
-        throw new Error(`Lecturer with ID ${lecturerId} not found`);
-      }
       const classDatesData = await ClassDatesSchema.findAll({
         where: {
           lecturerId: lecturerId,

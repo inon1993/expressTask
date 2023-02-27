@@ -58,7 +58,10 @@ export async function createTable(
     },
     async searchById(id: string) {
       const result = await LecturerSchema.findByPk(id);
-      return result?.toJSON();
+      if (!result) {
+        throw new Error(`Lecturer ID: ${id} not found.`);
+      }
+      return result.toJSON();
     },
   };
 }

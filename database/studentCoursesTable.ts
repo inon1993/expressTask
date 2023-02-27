@@ -17,7 +17,7 @@ export interface StudentCoursesInterface {
   insert: (
     studentCourses: Omit<AppModel["StudentCourses"], "id">
   ) => Promise<AppModel["StudentCourses"]>;
-  searchById: (id: string) => Promise<AppModel["StudentCourses"] | undefined>;
+  searchById: (id: string) => Promise<AppModel["StudentCourses"]>;
   delete: (id: string) => Promise<boolean>;
   addStudentToCourseIfAvailable: (
     studentId: string,
@@ -92,7 +92,10 @@ export async function createTable(
     },
     async searchById(id: string) {
       const result = await StudentCoursesSchema.findByPk(id);
-      return result?.toJSON();
+      if (!result) {
+        throw new Error(`StudentCourse ${id} not found.`);
+      }
+      return result.toJSON();
     },
     async addStudentToCourseIfAvailable(
       studentId: string,

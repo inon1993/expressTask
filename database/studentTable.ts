@@ -9,7 +9,7 @@ export interface StudentInterface {
     student: Omit<AppModel["Student"], "id">
   ) => Promise<AppModel["Student"]>;
   delete: (id: string) => Promise<boolean>;
-  searchById: (id: string) => Promise<AppModel["Student"] | undefined>;
+  searchById: (id: string) => Promise<AppModel["Student"]>;
 }
 
 export async function createTable(
@@ -49,6 +49,10 @@ export async function createTable(
       return result.toJSON();
     },
     async delete(id: string) {
+      const student = await StudentSchema.findByPk(id);
+      if (!student) {
+        throw new Error(`Student ID: ${id} not found.`);
+      }
       await StudentSchema.destroy({
         where: { id: id },
       });
@@ -56,7 +60,10 @@ export async function createTable(
     },
     async searchById(id: string) {
       const result = await StudentSchema.findByPk(id);
-      return result?.toJSON();
+      if (!result) {
+        throw new Error(`Student ID: ${id} not found.`);
+      }
+      return result.toJSON();
     },
   };
 }

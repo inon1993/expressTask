@@ -16,27 +16,28 @@ export function createRouter(db: DB) {
       const validatedData = StudentValidator(data);
       const result = await db.Student.insert(validatedData);
       return res.status(200).json({ status: "created", data: result });
-    } catch (error) {
-      return res.status(400).json(error);
+    } catch (error: any) {
+      return res.status(400).json(error.message);
     }
   });
 
   studentRouter.delete(
     "/delete/:studentId",
     async (req: Request, res: Response) => {
-      const data: string = req.params.studentId;
+      const id: string = req.params.studentId;
       try {
-        if (!uuidValidator.test(data)) {
+        if (!uuidValidator.test(id)) {
           throw new Error("Invalid Input.");
         }
-        const result = await db.Student.delete(data);
+        const isStudent = await db.Student.searchById(id);
+        const result = await db.Student.delete(id);
         if (result) {
           return res.status(200).json({ status: "deleted" });
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -57,29 +58,28 @@ export function createRouter(db: DB) {
       } else {
         return res.status(404).json({ status: "not found" });
       }
-    } catch (error) {
-      return res.status(400).json(error);
+    } catch (error: any) {
+      return res.status(400).json(error.message);
     }
   });
 
   studentRouter.get(
     "/:studentId/current_courses",
     async (req: Request, res: Response) => {
-      const data: string = req.params.studentId;
+      const id: string = req.params.studentId;
       try {
-        if (!uuidValidator.test(data)) {
+        if (!uuidValidator.test(id)) {
           throw new Error("Invalid Input.");
         }
-        const result = await db.StudentCourses.searchStudentCurrentCourses(
-          data
-        );
+        const isStudent = await db.Student.searchById(id);
+        const result = await db.StudentCourses.searchStudentCurrentCourses(id);
         if (result) {
           return res.status(200).json({ status: "success", data: result });
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -92,14 +92,15 @@ export function createRouter(db: DB) {
         if (!uuidValidator.test(id)) {
           throw new Error("Invalid Input.");
         }
+        const isStudent = await db.Student.searchById(id);
         const result = await db.StudentCourses.getStudentsCoursesHistory(id);
         if (result) {
           return res.status(200).json({ status: "success", data: result });
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -116,7 +117,7 @@ export function createRouter(db: DB) {
         if (!uuidValidator.test(id) || !startDateObject || !endDateObject) {
           throw new Error("Invalid Input.");
         }
-
+        const isStudent = await db.Student.searchById(id);
         const result = await db.StudentCourses.getStudentSchedule(
           id,
           startDateObject,
@@ -127,8 +128,8 @@ export function createRouter(db: DB) {
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );

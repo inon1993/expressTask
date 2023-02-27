@@ -16,27 +16,28 @@ export function createRouter(db: DB) {
       const validatedData = lecturerValidator(data);
       const result = await db.Lecturer.insert(validatedData);
       return res.status(200).json({ status: "created", data: result });
-    } catch (error) {
-      return res.status(400).json(error);
+    } catch (error: any) {
+      return res.status(400).json(error.message);
     }
   });
 
   lecturerRouter.delete(
     "/delete/:lecturerId",
     async (req: Request, res: Response) => {
-      const data: string = req.params.lecturerId;
+      const id: string = req.params.lecturerId;
       try {
-        if (!uuidValidator.test(data)) {
+        if (!uuidValidator.test(id)) {
           throw new Error("Invalid Input.");
         }
-        const result = await db.Lecturer.delete(data);
+        const lecturer = await db.Lecturer.searchById(id);
+        const result = await db.Lecturer.delete(id);
         if (result) {
           return res.status(200).json({ status: "deleted" });
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -44,19 +45,20 @@ export function createRouter(db: DB) {
   lecturerRouter.get(
     "/:lecturerId/current_courses",
     async (req: Request, res: Response) => {
-      const data: string = req.params.lecturerId;
+      const id: string = req.params.lecturerId;
       try {
-        if (!uuidValidator.test(data)) {
+        if (!uuidValidator.test(id)) {
           throw new Error("Invalid Input.");
         }
-        const result = await db.ClassDates.searchLecturerCurrentCourses(data);
+        const lecturer = await db.Lecturer.searchById(id);
+        const result = await db.ClassDates.searchLecturerCurrentCourses(id);
         if (result) {
           return res.status(200).json({ status: "success", data: result });
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -73,6 +75,7 @@ export function createRouter(db: DB) {
         if (!uuidValidator.test(id) || !startDateObject || !endDateObject) {
           throw new Error("Invalid Input.");
         }
+        const lecturer = await db.Lecturer.searchById(id);
         const result = await db.ClassDates.searchLecturerCourses(
           id,
           startDateObject,
@@ -83,8 +86,8 @@ export function createRouter(db: DB) {
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -101,6 +104,7 @@ export function createRouter(db: DB) {
         if (!uuidValidator.test(id) || !startDateObject || !endDateObject) {
           throw new Error("Invalid Input.");
         }
+        const lecturer = await db.Lecturer.searchById(id);
         const result = await db.ClassDates.getLecturerSchedule(
           id,
           startDateObject,
@@ -111,8 +115,8 @@ export function createRouter(db: DB) {
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );

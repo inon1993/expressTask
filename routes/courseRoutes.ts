@@ -20,8 +20,8 @@ export function createRouter(db: DB) {
       const validatedData = courseValidator(data);
       const result = await db.Course.insert(validatedData);
       return res.status(200).json({ status: "created", data: result });
-    } catch (error) {
-      return res.status(400).json(error);
+    } catch (error: any) {
+      return res.status(400).json(error.message);
     }
   });
 
@@ -33,33 +33,58 @@ export function createRouter(db: DB) {
       }
       const result = await db.Syllabus.insert(data);
       return res.status(200).json({ status: "created", data: result });
-    } catch (error) {
-      return res.status(400).json(error);
+    } catch (error: any) {
+      return res.status(400).json(error.message);
     }
   });
 
   courseRouter.delete(
-    "/delete/:courseId",
+    "/delete_syllabus/:courseId",
     async (req: Request, res: Response) => {
-      const data: string = req.params.courseId;
+      const id: string = req.params.courseId;
       try {
-        if (!uuidValidator.test(data)) {
+        if (!uuidValidator.test(id)) {
           throw new Error("Invalid Input.");
         }
-        const result = await db.Course.delete(data);
+        const syllabus = await db.Syllabus.searchById(id);
+        const result = await db.Syllabus.delete(id);
         if (result) {
           return res.status(200).json({ status: "deleted" });
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
+      }
+    }
+  );
+
+  courseRouter.delete(
+    "/delete/:courseId",
+    async (req: Request, res: Response) => {
+      const id: string = req.params.courseId;
+      try {
+        if (!uuidValidator.test(id)) {
+          throw new Error("Invalid Input.");
+        }
+        const course = await db.Course.searchById(id);
+        const result = await db.Course.delete(id);
+        if (result) {
+          return res.status(200).json({ status: "deleted" });
+        } else {
+          return res.status(404).json({ status: "not found" });
+        }
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
 
   courseRouter.post("/add_class_date", async (req: Request, res: Response) => {
     const data: Omit<AppModels["ClassDates"], "id"> = req.body;
+    const room = await db.Room.searchById(data.roomId);
+    const syllabus = await db.Syllabus.searchById(data.syllabusId);
+    const lecturer = await db.Lecturer.searchById(data.lecturerId);
     try {
       const validatedData = classDateValidator(data);
       if (!validatedData) {
@@ -67,27 +92,28 @@ export function createRouter(db: DB) {
       }
       const result = await db.ClassDates.insert(validatedData);
       return res.status(200).json({ status: "created", data: result });
-    } catch (error) {
-      return res.status(400).json(error);
+    } catch (error: any) {
+      return res.status(400).json(error.message);
     }
   });
 
   courseRouter.delete(
     "/delete_class_date/:classDateId",
     async (req: Request, res: Response) => {
-      const data: string = req.params.classDateId;
+      const id: string = req.params.classDateId;
       try {
-        if (!uuidValidator.test(data)) {
+        if (!uuidValidator.test(id)) {
           throw new Error("Invalid Input.");
         }
-        const result = await db.ClassDates.delete(data);
+        const course = await db.ClassDates.searchById(id);
+        const result = await db.ClassDates.delete(id);
         if (result) {
           return res.status(200).json({ status: "deleted" });
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -107,8 +133,8 @@ export function createRouter(db: DB) {
         } else {
           return res.status(404).json({ status: "not found" });
         }
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );
@@ -119,6 +145,7 @@ export function createRouter(db: DB) {
       if (!uuidValidator.test(id)) {
         throw new Error("Invalid course ID");
       }
+      const course = await db.Course.searchById(id);
       const data = req.body;
       const numOfStudents = await db.StudentCourses.countStudents(id);
       if (data.startingDate) {
@@ -151,8 +178,8 @@ export function createRouter(db: DB) {
       } else {
         return res.status(404).json({ status: "not found" });
       }
-    } catch (error) {
-      return res.status(400).json(error);
+    } catch (error: any) {
+      return res.status(400).json(error.message);
     }
   });
 
@@ -165,6 +192,7 @@ export function createRouter(db: DB) {
         if (!uuidValidator.test(id)) {
           throw new Error("Invalid input.");
         }
+        const course = await db.Course.searchById(id);
         const isSyllabus = await db.Syllabus.countSyllabus(id);
         if (!isSyllabus || isSyllabus < 1) {
           const updateRow = await db.Course.updateReady(id, false);
@@ -182,8 +210,8 @@ export function createRouter(db: DB) {
           results.status = "ready";
         }
         return res.status(200).json(results);
-      } catch (error) {
-        return res.status(400).json(error);
+      } catch (error: any) {
+        return res.status(400).json(error.message);
       }
     }
   );

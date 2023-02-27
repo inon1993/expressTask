@@ -9,7 +9,7 @@ export interface SyllabusInterface {
   insert: (
     course: Omit<AppModel["Syllabus"], "id">
   ) => Promise<AppModel["Syllabus"]>;
-  searchById: (id: string) => Promise<AppModel["Syllabus"] | undefined>;
+  searchById: (id: string) => Promise<AppModel["Syllabus"]>;
   delete: (id: string) => Promise<boolean>;
   countSyllabus: (id: string) => Promise<number>;
 }
@@ -65,7 +65,10 @@ export async function createTable(
     },
     async searchById(id: string) {
       const result = await SyllabusSchema.findByPk(id);
-      return result?.toJSON();
+      if (!result) {
+        throw new Error(`Syllabus ID: ${id} not found.`);
+      }
+      return result.toJSON();
     },
     async delete(id: string) {
       await SyllabusSchema.destroy({

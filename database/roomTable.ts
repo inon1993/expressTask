@@ -43,7 +43,7 @@ export async function createTable(
       if (!result) {
         throw new Error(`Room ID: ${id} not found.`);
       }
-      return result?.toJSON();
+      return result.toJSON();
     },
   };
 }
